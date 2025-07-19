@@ -1,6 +1,26 @@
-// src/commandBuilder.ts
-
+/**
+ * Classe utilitária para construção de comandos para dispositivos Teltonika.
+ * Atualmente implementa montagem de pacotes usando o Codec 12.
+ */
 export class TeltonikaCommandBuilder {
+  /**
+   * Constrói um comando Codec 12 a partir de uma string de comando ASCII.
+   *
+   * O comando gerado possui o seguinte formato:
+   *   - 4 bytes de preâmbulo (0x00000000)
+   *   - 4 bytes de comprimento
+   *   - Corpo com:
+   *     - Codec ID (0x0C)
+   *     - Número de registros (0x01)
+   *     - Tipo de comando (0x05)
+   *     - Tamanho do comando (4 bytes)
+   *     - Comando em ASCII
+   *     - Número de registros (repetido)
+   *   - 4 bytes de CRC16/ARC (com padding à esquerda)
+   *
+   * @param command Comando em ASCII (ex: "getver")
+   * @returns Pacote completo pronto para envio via TCP
+   */
   static buildCodec12Command(command: string): Buffer {
     const preamble = Buffer.from([0x00, 0x00, 0x00, 0x00]);
     const codecId = Buffer.from([0x0C]);
@@ -36,6 +56,14 @@ export class TeltonikaCommandBuilder {
     return fullPacket;
   }
 
+  /**
+   * Calcula o CRC16/ARC de uma sequência de bytes.
+   * 
+   * Utiliza o polinômio 0xA001 e valor inicial 0x0000, seguindo o padrão Teltonika.
+   *
+   * @param data Buffer de dados para cálculo do CRC
+   * @returns Valor do CRC16 calculado (16 bits)
+   */
   static calculateCRC16ARC(data: Buffer): number {
     let crc = 0x0000;
     for (const byte of data) {
