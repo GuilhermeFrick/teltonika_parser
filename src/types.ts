@@ -1,29 +1,29 @@
 /**
- * Interface que representa o resultado do pré-parsing de um pacote Teltonika.
+ * Interface representing the result of pre-parsing a Teltonika packet.
  */
 export interface PreParsedTeltonika {
   /**
-   * IMEI extraído do pacote (caso disponível).
+   * IMEI extracted from the packet (if available).
    */
   imei?: string;
 
   /**
-   * Payload bruto da mensagem (caso válida).
+   * Raw payload of the message (if valid).
    */
   payload?: Buffer;
 
   /**
-   * Resposta imediata a ser enviada ao dispositivo (como ACK ao IMEI).
+   * Immediate response to be sent to the device (such as ACK for IMEI).
    */
   rawResponse?: Buffer;
 
   /**
-   * Indica se o pacote é válido após o pré-parsing.
+   * Indicates whether the packet is valid after pre-parsing.
    */
   isValid: boolean;
 
   /**
-   * Mensagem de erro, se o parsing falhar.
+   * Error message, if parsing fails.
    */
   error?: string;
 }

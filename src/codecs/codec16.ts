@@ -1,6 +1,15 @@
-// src/codecs/codec16.ts
-
+/**
+ * Parser para pacotes Teltonika Codec16.
+ *
+ * Codec16 é utilizado para transmitir dados AVL estendidos com IOs de até 8 bytes.
+ */
 export const Codec16Parser = {
+  /**
+   * Realiza o parsing de uma string hexadecimal representando um pacote Codec16.
+   *
+   * @param hex - String em hexadecimal representando os dados brutos.
+   * @returns Um array de registros decodificados ou um erro se o parsing falhar.
+   */
   parse: (hex: string): any[] => {
     try {
       const dataFieldLength = parseInt(hex.slice(8, 16), 16);
@@ -25,6 +34,12 @@ export const Codec16Parser = {
   },
 };
 
+/**
+ * Faz o parsing de um único registro AVL do Codec16.
+ *
+ * @param hex - String hexadecimal do registro.
+ * @returns Um objeto com os dados decodificados do registro AVL.
+ */
 function parseCodec16Record(hex: string): any {
   try {
     let offset = 0;
@@ -39,6 +54,7 @@ function parseCodec16Record(hex: string): any {
     offset += 8;
     const latitude = toSignedInt(hex.slice(offset, offset + 8)) / 1e7;
     offset += 8;
+
     const altitude = parseInt(hex.slice(offset, offset + 4), 16);
     offset += 4;
     const angle = parseInt(hex.slice(offset, offset + 4), 16);
@@ -67,13 +83,20 @@ function parseCodec16Record(hex: string): any {
       speed,
       eventIOId,
       ioData,
-      size: offset / 2
+      size: offset / 2 // tamanho em bytes
     };
   } catch (err) {
     return { error: 'Erro ao parsear record Codec16', detail: err };
   }
 }
 
+/**
+ * Faz o parsing dos elementos IO do registro AVL.
+ *
+ * @param hex - String hexadecimal representando os dados IO.
+ * @param totalIO - Número total de elementos IO declarados.
+ * @returns Um objeto contendo os pares {id: valor} e o tamanho processado.
+ */
 function parseIOElements(hex: string, totalIO: number): { ioData: Record<number, number>, size: number } {
   let offset = 0;
   const ioData: Record<number, number> = {};
@@ -94,6 +117,12 @@ function parseIOElements(hex: string, totalIO: number): { ioData: Record<number,
   return { ioData, size: offset };
 }
 
+/**
+ * Converte um número hexadecimal para inteiro com sinal (signed 32 bits).
+ *
+ * @param hex - String hexadecimal de 4 bytes (8 caracteres).
+ * @returns Inteiro com sinal equivalente.
+ */
 function toSignedInt(hex: string): number {
   const buffer = Buffer.from(hex, 'hex');
   return buffer.readInt32BE();

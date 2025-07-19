@@ -1,25 +1,25 @@
 /**
- * Classe utilitária para construção de comandos para dispositivos Teltonika.
- * Atualmente implementa montagem de pacotes usando o Codec 12.
+ * Utility class for building commands for Teltonika devices.
+ * Currently implements packet construction using Codec 12.
  */
 export class TeltonikaCommandBuilder {
   /**
-   * Constrói um comando Codec 12 a partir de uma string de comando ASCII.
+   * Builds a Codec 12 command from an ASCII command string.
    *
-   * O comando gerado possui o seguinte formato:
-   *   - 4 bytes de preâmbulo (0x00000000)
-   *   - 4 bytes de comprimento
-   *   - Corpo com:
+   * The generated command follows this structure:
+   *   - 4-byte preamble (0x00000000)
+   *   - 4-byte length field
+   *   - Body including:
    *     - Codec ID (0x0C)
-   *     - Número de registros (0x01)
-   *     - Tipo de comando (0x05)
-   *     - Tamanho do comando (4 bytes)
-   *     - Comando em ASCII
-   *     - Número de registros (repetido)
-   *   - 4 bytes de CRC16/ARC (com padding à esquerda)
+   *     - Number of records (0x01)
+   *     - Command type (0x05)
+   *     - Command size (4 bytes)
+   *     - ASCII command
+   *     - Number of records (repeated)
+   *   - 4-byte CRC16/ARC (with left padding)
    *
-   * @param command Comando em ASCII (ex: "getver")
-   * @returns Pacote completo pronto para envio via TCP
+   * @param command ASCII command (e.g., "getver")
+   * @returns Complete packet ready to be sent via TCP
    */
   static buildCodec12Command(command: string): Buffer {
     const preamble = Buffer.from([0x00, 0x00, 0x00, 0x00]);
@@ -41,7 +41,7 @@ export class TeltonikaCommandBuilder {
 
     const crc = this.calculateCRC16ARC(crcData);
     const crcBuf = Buffer.alloc(4);
-    crcBuf.writeUInt16BE(crc, 2); // pad 2 bytes à esquerda como 0x0000
+    crcBuf.writeUInt16BE(crc, 2); // pad 2 bytes on the left as 0x0000
 
     const packetLength = Buffer.alloc(4);
     packetLength.writeUInt32BE(crcData.length);
@@ -57,12 +57,12 @@ export class TeltonikaCommandBuilder {
   }
 
   /**
-   * Calcula o CRC16/ARC de uma sequência de bytes.
+   * Calculates the CRC16/ARC checksum for a sequence of bytes.
    * 
-   * Utiliza o polinômio 0xA001 e valor inicial 0x0000, seguindo o padrão Teltonika.
+   * Uses polynomial 0xA001 and initial value 0x0000, as per Teltonika standard.
    *
-   * @param data Buffer de dados para cálculo do CRC
-   * @returns Valor do CRC16 calculado (16 bits)
+   * @param data Buffer containing the data to calculate CRC over
+   * @returns The computed 16-bit CRC16 value
    */
   static calculateCRC16ARC(data: Buffer): number {
     let crc = 0x0000;

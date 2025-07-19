@@ -1,6 +1,14 @@
-// src/codecs/codec8Extended.ts
-
+/**
+ * Parser for Teltonika Codec8 Extended messages.
+ * Uses the same basic layout as Codec8, with additional IO extensions.
+ */
 export const Codec8ExtendedParser = {
+  /**
+   * Parses a hexadecimal string containing Codec8 Extended data.
+   *
+   * @param hex - Hexadecimal string of the message payload.
+   * @returns Array of decoded AVL records or an error.
+   */
   parse: (hex: string): any[] => {
     try {
       const dataFieldLength = parseInt(hex.slice(8, 16), 16);
@@ -20,11 +28,17 @@ export const Codec8ExtendedParser = {
 
       return records;
     } catch (err) {
-      return [{ error: 'Erro no parser Codec8 Extended', detail: err }];
+      return [{ error: 'Error in Codec8 Extended parser', detail: err }];
     }
   }
 };
 
+/**
+ * Parses a single AVL record (event + GPS + IO) for Codec8 Extended.
+ *
+ * @param hex - Hexadecimal substring representing the record.
+ * @returns Object containing the record data and its size in bytes.
+ */
 function parseRecord(hex: string): any {
   try {
     let offset = 0;
@@ -67,13 +81,20 @@ function parseRecord(hex: string): any {
       speed,
       eventIOId,
       ioData,
-      size: offset / 2
+      size: offset / 2 // size in bytes
     };
   } catch (err) {
-    return { error: 'Erro ao parsear record Codec8 Extended', detail: err };
+    return { error: 'Error parsing Codec8 Extended record', detail: err };
   }
 }
 
+/**
+ * Parses the IO elements from the final part of the AVL record.
+ *
+ * @param hex - Hexadecimal substring containing the IO elements.
+ * @param totalIO - Total number of expected IO elements.
+ * @returns Object containing the decoded IOs and total size read in bytes.
+ */
 function parseIOElements(hex: string, totalIO: number): { ioData: Record<number, number>, size: number } {
   let offset = 0;
   const ioData: Record<number, number> = {};
@@ -94,6 +115,12 @@ function parseIOElements(hex: string, totalIO: number): { ioData: Record<number,
   return { ioData, size: offset };
 }
 
+/**
+ * Converts an 8-character hexadecimal string (4 bytes) to a signed 32-bit integer.
+ *
+ * @param hex - Hexadecimal string of 8 characters.
+ * @returns Corresponding signed integer value.
+ */
 function toSignedInt(hex: string): number {
   const buffer = Buffer.from(hex, 'hex');
   return buffer.readInt32BE();

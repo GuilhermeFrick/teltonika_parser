@@ -1,22 +1,22 @@
 /**
- * Classe responsável pelo pré-processamento de pacotes Teltonika.
+ * Class responsible for pre-processing Teltonika packets.
  *
- * O objetivo do PreParser é identificar pacotes válidos, associar o IMEI à conexão,
- * validar o CRC e preparar os dados para o parser completo.
+ * The goal of the PreParser is to identify valid packets, associate the IMEI with the connection,
+ * validate the CRC, and prepare the data for full parsing.
  */
 import { PreParsedTeltonika } from './types';
 
 export class TeltonikaPreParser {
   /**
-   * Mapa interno que associa um `connectionId` ao IMEI identificado.
+   * Internal map that associates a `connectionId` with the identified IMEI.
    */
   private static connectionMap = new Map<string, string>();
 
   /**
-   * Calcula o CRC-16/IBM de um buffer de dados.
+   * Computes the CRC-16/IBM for a data buffer.
    *
-   * @param data Buffer com os dados sobre os quais o CRC será calculado
-   * @returns Valor numérico de 16 bits do CRC calculado
+   * @param data Buffer containing the data for CRC calculation
+   * @returns 16-bit numeric value of the calculated CRC
    */
   static crc16(data: Buffer): number {
     let crc = 0xFFFF;
@@ -31,18 +31,18 @@ export class TeltonikaPreParser {
   }
 
   /**
-   * Realiza o pré-processamento de um pacote Teltonika, retornando o IMEI e o payload bruto (se válido).
+   * Performs pre-processing of a Teltonika packet, returning the IMEI and raw payload (if valid).
    *
-   * Valida o preâmbulo, tamanho, CRC e extrai o IMEI. Caso o pacote contenha apenas o IMEI,
-   * armazena esse valor associado ao `connectionId` e retorna resposta de handshake.
+   * Validates the preamble, length, CRC, and extracts the IMEI. If the packet only contains the IMEI,
+   * it stores that value associated with the `connectionId` and returns a handshake response.
    *
-   * @param buffer Buffer contendo os dados do pacote Teltonika
-   * @param connectionId Identificador da conexão TCP associada (opcional, porém necessário para dados após IMEI)
-   * @returns Objeto com resultado do pré-parsing (sucesso ou erro)
+   * @param buffer Buffer containing the Teltonika packet data
+   * @param connectionId Optional TCP connection identifier (required for packets after the IMEI)
+   * @returns Object with the result of pre-parsing (success or error)
    */
   static process(buffer: Buffer, connectionId?: string): PreParsedTeltonika {
     try {
-      // Pacote apenas com IMEI (handshake inicial)
+      // IMEI-only packet (initial handshake)
       if (buffer.length === 17 && buffer.slice(0, 2).equals(Buffer.from([0x00, 0x0F]))) {
         const imei = buffer.slice(2).toString('ascii');
         if (connectionId) this.connectionMap.set(connectionId, imei);
@@ -54,22 +54,22 @@ export class TeltonikaPreParser {
         };
       }
 
-      // Se não tiver IMEI associado à conexão
+      // If no IMEI is associated with the connection
       if (!connectionId || !this.connectionMap.has(connectionId)) {
-        return { isValid: false, error: "IMEI não recebido antes dos dados." };
+        return { isValid: false, error: "IMEI not received before data." };
       }
 
-      // Validação de tamanho mínimo
+      // Minimum size validation
       if (buffer.length < 18) {
-        return { isValid: false, error: "Pacote muito curto." };
+        return { isValid: false, error: "Packet too short." };
       }
 
-      // Verificação do preâmbulo
+      // Preamble verification
       if (!buffer.slice(0, 4).equals(Buffer.from([0x00, 0x00, 0x00, 0x00]))) {
-        return { isValid: false, error: "Preâmbulo inválido." };
+        return { isValid: false, error: "Invalid preamble." };
       }
 
-      // Extração dos campos
+      // Field extraction
       const dataLength = buffer.readUInt32BE(4);
       const payloadStart = 8;
       const payloadEnd = payloadStart + dataLength;
@@ -77,7 +77,7 @@ export class TeltonikaPreParser {
       const crcEnd = crcStart + 4;
 
       if (buffer.length < crcEnd) {
-        return { isValid: false, error: "Pacote incompleto para CRC." };
+        return { isValid: false, error: "Incomplete packet for CRC." };
       }
 
       const payload = buffer.slice(payloadStart, payloadEnd);
@@ -85,7 +85,7 @@ export class TeltonikaPreParser {
       const calculatedCrc = this.crc16(payload);
 
       if (receivedCrc !== calculatedCrc) {
-        return { isValid: false, error: `CRC inválido. Esperado ${calculatedCrc}, recebido ${receivedCrc}` };
+        return { isValid: false, error: `Invalid CRC. Expected ${calculatedCrc}, received ${receivedCrc}` };
       }
 
       return {

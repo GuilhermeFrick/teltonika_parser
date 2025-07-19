@@ -8,31 +8,31 @@ import { Codec14Parser } from './codecs/codec14';
 import { Codec16Parser } from './codecs/codec16';
 
 /**
- * Estrutura representando um frame Teltonika já decodificado.
+ * Structure representing a decoded Teltonika frame.
  */
 export interface ParsedTeltonikaFrame {
-  /** IMEI do rastreador */
+  /** Tracker's IMEI */
   imei: string;
-  /** Identificador do codec (ex: 0x08, 0x0C, etc) */
+  /** Codec identifier (e.g., 0x08, 0x0C, etc.) */
   codecId: number;
-  /** Nome do codec (formato legível) */
+  /** Codec name (readable format) */
   codecName: string;
-  /** Lista de registros decodificados fornecidos pelo codec */
+  /** List of decoded records provided by the codec */
   records: any[];
 }
 
 /**
- * Classe responsável por realizar o parsing completo de pacotes Teltonika
- * com base no codec informado no payload. Utiliza parsers específicos para
- * cada codec.
+ * Class responsible for fully parsing Teltonika packets
+ * based on the codec found in the payload. It uses specific parsers
+ * for each codec.
  */
 export class TeltonikaPackageParser {
   /**
-   * Realiza o parsing do pacote a partir do payload e IMEI fornecidos.
+   * Parses the packet based on the provided payload and IMEI.
    *
-   * @param input Objeto contendo o IMEI e o payload em formato Buffer
-   * @returns Estrutura ParsedTeltonikaFrame com os dados decodificados
-   * @throws Erro se o codec não for suportado
+   * @param input Object containing the IMEI and the payload as a Buffer
+   * @returns ParsedTeltonikaFrame structure with decoded data
+   * @throws Error if the codec is not supported
    */
   static parse(input: { imei: string; payload: Buffer }): ParsedTeltonikaFrame {
     const rawHex = input.payload.toString('hex');
@@ -41,7 +41,7 @@ export class TeltonikaPackageParser {
 
     const parser = TeltonikaPackageParser.getParser(codecIdHex);
     if (!parser) {
-      throw new Error(`Codec ${codecIdHex} não suportado.`);
+      throw new Error(`Codec ${codecIdHex} not supported.`);
     }
 
     const records = parser.parse(rawHex);
@@ -54,10 +54,10 @@ export class TeltonikaPackageParser {
   }
 
   /**
-   * Retorna o parser correspondente ao codec informado.
+   * Returns the appropriate parser for the given codec.
    *
-   * @param codecId Identificador do codec em formato hexadecimal (ex: '08')
-   * @returns Objeto com método parse ou null se codec for desconhecido
+   * @param codecId Codec identifier in hexadecimal format (e.g., '08')
+   * @returns Object with a parse method or null if codec is unknown
    */
   private static getParser(codecId: string): { parse: (hex: string) => any[] } | null {
     switch (codecId) {

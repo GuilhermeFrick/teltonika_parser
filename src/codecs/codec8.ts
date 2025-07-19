@@ -1,6 +1,13 @@
-
-
+/**
+ * Parser for Teltonika Codec 8 packets.
+ * Responsible for extracting AVL records and telemetry data.
+ */
 export const Codec8Parser = {
+  /**
+   * Parses the Codec 8 payload.
+   * @param hex Data in hexadecimal format (full payload).
+   * @returns List of decoded records or an error.
+   */
   parse: (hex: string): any[] => {
     try {
       const dataFieldLength = parseInt(hex.slice(8, 16), 16);
@@ -20,11 +27,16 @@ export const Codec8Parser = {
 
       return records;
     } catch (err) {
-      return [{ error: 'Erro no parser Codec8', detail: err }];
+      return [{ error: 'Error in Codec8 parser', detail: err }];
     }
   }
 };
 
+/**
+ * Parses a single AVL record in Codec 8 format.
+ * @param hex Record in hexadecimal format.
+ * @returns Object containing decoded data.
+ */
 function parseCodec8Record(hex: string): any {
   try {
     let offset = 0;
@@ -70,10 +82,16 @@ function parseCodec8Record(hex: string): any {
       size: offset / 2 // size in bytes
     };
   } catch (err) {
-    return { error: 'Erro ao parsear record Codec8', detail: err };
+    return { error: 'Error parsing Codec8 record', detail: err };
   }
 }
 
+/**
+ * Extracts IO elements of various sizes from the Codec 8 payload.
+ * @param hex Hex sequence of IO elements.
+ * @param totalIO Total number of declared IO elements.
+ * @returns Object containing IO data and the total parsed size.
+ */
 function parseIOElements(hex: string, totalIO: number): { ioData: Record<number, number>, size: number } {
   let offset = 0;
   const ioData: Record<number, number> = {};
@@ -94,6 +112,11 @@ function parseIOElements(hex: string, totalIO: number): { ioData: Record<number,
   return { ioData, size: offset };
 }
 
+/**
+ * Converts a hexadecimal string to a signed 32-bit integer.
+ * @param hex Hexadecimal value.
+ * @returns Corresponding signed integer.
+ */
 function toSignedInt(hex: string): number {
   const buffer = Buffer.from(hex, 'hex');
   return buffer.readInt32BE();
