@@ -10,5 +10,8 @@ module.exports = {
   transform: {
     '^.+\\.ts$': ['ts-jest']
   },
+  collectCoverage: true,
+  coverageDirectory: 'coverage',
+  coverageReporters: ['lcov', 'text-summary'],
   moduleFileExtensions: ['ts', 'js', 'json', 'node'],
 };
