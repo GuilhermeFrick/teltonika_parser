@@ -32,11 +32,6 @@ export const Codec8Parser = {
   }
 };
 
-/**
- * Parses a single AVL record in Codec 8 format.
- * @param hex Record in hexadecimal format.
- * @returns Object containing decoded data.
- */
 function parseCodec8Record(hex: string): any {
   try {
     let offset = 0;
@@ -51,6 +46,7 @@ function parseCodec8Record(hex: string): any {
     offset += 8;
     const latitude = toSignedInt(hex.slice(offset, offset + 8)) / 1e7;
     offset += 8;
+
     const altitude = parseInt(hex.slice(offset, offset + 4), 16);
     offset += 4;
     const angle = parseInt(hex.slice(offset, offset + 4), 16);
@@ -71,20 +67,23 @@ function parseCodec8Record(hex: string): any {
     return {
       timestamp: new Date(time.getTime()).toISOString(),
       priority,
-      longitude,
-      latitude,
-      altitude,
-      angle,
-      satellites,
-      speed,
+      gps: {
+        longitude,
+        latitude,
+        altitude,
+        angle,
+        satellites,
+        speed,
+      },
       eventIOId,
-      ioData,
-      size: offset / 2 // size in bytes
+      io: ioData,
+      size: offset / 2, // em bytes
     };
   } catch (err) {
     return { error: 'Error parsing Codec8 record', detail: err };
   }
 }
+
 
 /**
  * Extracts IO elements of various sizes from the Codec 8 payload.
@@ -92,25 +91,31 @@ function parseCodec8Record(hex: string): any {
  * @param totalIO Total number of declared IO elements.
  * @returns Object containing IO data and the total parsed size.
  */
-function parseIOElements(hex: string, totalIO: number): { ioData: Record<number, number>, size: number } {
+function parseIOElements(hex: string, totalIO: number): { ioData: any, size: number } {
   let offset = 0;
-  const ioData: Record<number, number> = {};
+  const ioData: any = { n1: [], n2: [], n4: [], n8: [] };
   const sizes = [1, 2, 4, 8];
+  const keys = ['n1', 'n2', 'n4', 'n8'];
 
-  for (const size of sizes) {
+  for (let s = 0; s < sizes.length; s++) {
+    const size = sizes[s];
+    const key = keys[s];
     const count = parseInt(hex.slice(offset, offset + 2), 16);
     offset += 2;
+
     for (let i = 0; i < count; i++) {
       const id = parseInt(hex.slice(offset, offset + 2), 16);
       offset += 2;
       const value = parseInt(hex.slice(offset, offset + (2 * size)), 16);
       offset += 2 * size;
-      ioData[id] = value;
+
+      ioData[key].push({ id, value });
     }
   }
 
   return { ioData, size: offset };
 }
+
 
 /**
  * Converts a hexadecimal string to a signed 32-bit integer.

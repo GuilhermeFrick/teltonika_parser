@@ -19,19 +19,21 @@ export const Codec14Parser = {
       const dataLength = buffer.readUInt32BE(4);     // Tamanho dos dados úteis
       const codecId = buffer.readUInt8(8);           // ID do codec (esperado: 0x0E)
       const commandCount1 = buffer.readUInt8(9);     // Número de comandos (normalmente 1)
-      const messageType = buffer.readUInt8(10);      // Tipo da mensagem (ex: 0x01)
-      const commandSize = buffer.readUInt32BE(11);   // Tamanho do comando incluindo IMEI
+      const messageType = buffer.readUInt8(10);      // Tipo da mensagem (ex: 0x01 ou 0x05)
+      const commandSize = buffer.readUInt32BE(11);   // Tamanho total (IMEI + comando)
 
-      const imeiBuffer = buffer.slice(15, 23);       // IMEI codificado em 8 bytes BCD
-      const imei = [...imeiBuffer].map(byte => byte.toString().padStart(2, '0')).join('');
+      const imeiBuffer = buffer.slice(15, 23);       // IMEI em 8 bytes BCD
+      const imei = imeiBuffer.toString('hex').padStart(16, '0');
 
+      // Tamanho do comando = commandSize - 8 (pois 8 bytes são do IMEI)
+      const commandLength = commandSize - 8;
       const commandStart = 23;
-      const commandEnd = 15 + commandSize;
-      const commandBuffer = buffer.slice(commandStart, commandEnd); // Comando em ASCII
+      const commandEnd = commandStart + commandLength;
+      const commandBuffer = buffer.slice(commandStart, commandEnd);
       const command = commandBuffer.toString('ascii');
 
-      const commandCount2 = buffer.readUInt8(commandEnd);           // Deve ser igual a commandCount1
-      const crc = buffer.readUInt16BE(buffer.length - 2);           // CRC-16 dos dados
+      const commandCount2 = buffer.readUInt8(commandEnd);           // Segundo contador
+      const crc = buffer.readUInt16BE(buffer.length - 2);           // CRC final
 
       return [
         {

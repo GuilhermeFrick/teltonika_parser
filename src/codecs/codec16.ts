@@ -11,27 +11,41 @@ export const Codec16Parser = {
    * @returns Um array de registros decodificados ou um erro se o parsing falhar.
    */
   parse: (hex: string): any[] => {
-    try {
-      const dataFieldLength = parseInt(hex.slice(8, 16), 16);
-      const codecId = hex.slice(16, 18);
-      const numRecords = parseInt(hex.slice(18, 20), 16);
-      const avlData = hex.slice(20, 20 + dataFieldLength * 2);
+  try {
+    const buffer = Buffer.from(hex, 'hex');
 
-      let offset = 0;
-      const records: any[] = [];
+    const dataLength = buffer.readUInt32BE(4);
+    const codecId = buffer.readUInt8(8);
+    const commandCount1 = buffer.readUInt8(9);
+    const messageType = buffer.readUInt8(10);
 
-      for (let i = 0; i < numRecords; i++) {
-        const recordHex = avlData.slice(offset);
-        const record = parseCodec16Record(recordHex);
-        records.push(record);
-        offset += record.size * 2;
-      }
+    // Caso seja pacote de comando (não AVL)
+    if (messageType === 0x05) {
+      const commandSize = buffer.readUInt32BE(11);
+      const commandBuffer = buffer.slice(15, 15 + commandSize);
+      const commandHex = commandBuffer.toString('hex');
+      const commandAscii = commandBuffer.toString('ascii');
+      const commandCount2 = buffer.readUInt8(15 + commandSize);
+      const crc = buffer.readUInt16BE(buffer.length - 2);
 
-      return records;
-    } catch (err) {
-      return [{ error: 'Erro no parser Codec16', detail: err }];
+      return [{
+        codecId,
+        messageType,
+        commandSize,
+        commandHex,
+        commandAscii,
+        commandCount1,
+        commandCount2,
+        crc,
+      }];
     }
-  },
+
+    // Se não for tipo 0x05, tratar como AVL (não implementado aqui)
+    return [{ error: 'Tipo de mensagem Codec16 não suportado neste parser', codecId, messageType }];
+  } catch (err) {
+    return [{ error: 'Erro no parser Codec16', detail: err }];
+  }
+}
 };
 
 /**

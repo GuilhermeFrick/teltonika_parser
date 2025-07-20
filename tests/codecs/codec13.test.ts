@@ -7,7 +7,7 @@ describe('Codec13Parser', () => {
     // Exemplo fictício:
     // Timestamp = 0x60D5C2A5 = 1624630181 (Wed Jun 25 2021 12:29:41 GMT)
     // Mensagem ASCII: 'Hello, Codec13!'
-    const hex = '00000000000000190D01060000000F60D5C2A548656C6C6F2C20436F6465633133210100001234';
+    const hex = '00000000000000190D01060000001360D5C2A548656C6C6F2C20436F6465633133210100001234';
 
     const result = Codec13Parser.parse(hex);
     expect(result).toHaveLength(1);
@@ -15,7 +15,7 @@ describe('Codec13Parser', () => {
     const record = result[0];
     expect(record.codecId).toBe(0x0D);
     expect(record.responseType).toBe(0x06);
-    expect(record.responseSize).toBe(15);
+    expect(record.responseSize).toBe(19);
     expect(record.response).toBe('Hello, Codec13!');
     expect(record.responseCount1).toBe(1);
     expect(record.responseCount2).toBe(1);
@@ -48,6 +48,6 @@ describe('Codec13Parser', () => {
 
     const result = Codec13Parser.parse(hex);
     expect(result).toHaveLength(1);
-    expect(result[0].response).toBe(message);
+    expect(result[0].response).toEqual(message); // pode dar erro mais preciso
   });
 });

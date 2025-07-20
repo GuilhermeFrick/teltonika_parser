@@ -42,8 +42,8 @@ export const Codec8ExtendedParser = {
 function parseRecord(hex: string): any {
   try {
     let offset = 0;
-    const timestamp = parseInt(hex.slice(offset, offset + 16), 16);
-    const time = new Date(timestamp);
+    const timestamp = BigInt('0x' + hex.slice(offset, offset + 16));
+    const time = new Date(Number(timestamp));
     offset += 16;
 
     const priority = parseInt(hex.slice(offset, offset + 2), 16);
