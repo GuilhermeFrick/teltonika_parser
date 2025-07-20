@@ -23,7 +23,7 @@ export const Codec13Parser = {
       const timestamp = buffer.readUInt32BE(15) * 1000; // UNIX timestamp (seconds), converted to ms
 
       const responseStart = 19;
-      const responseEnd = responseStart + (responseSize - 4); // Exclude timestamp size
+      const responseEnd = responseStart + responseSize; // Corrigido aqui
       const response = buffer.slice(responseStart, responseEnd).toString('ascii');
 
       const responseCount2 = buffer.readUInt8(responseEnd); // Must match responseCount1
