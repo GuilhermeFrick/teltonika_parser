@@ -1,36 +1,37 @@
 import { TeltonikaPackageParser } from '../src/packageParser';
+import { jest } from '@jest/globals';
 
-jest.mock('../../src/codecs/codec8', () => ({
+jest.mock('../src/codecs/codec8', () => ({
   Codec8Parser: {
     parse: jest.fn().mockReturnValue([{ mock: 'codec8' }]),
   },
 }));
 
-jest.mock('../../src/codecs/codec8Extended', () => ({
+jest.mock('../src/codecs/codec8Extended', () => ({
   Codec8ExtendedParser: {
     parse: jest.fn().mockReturnValue([{ mock: 'codec8Extended' }]),
   },
 }));
 
-jest.mock('../../src/codecs/codec12', () => ({
+jest.mock('../src/codecs/codec12', () => ({
   Codec12Parser: {
     parse: jest.fn().mockReturnValue([{ mock: 'codec12' }]),
   },
 }));
 
-jest.mock('../../src/codecs/codec13', () => ({
+jest.mock('../src/codecs/codec13', () => ({
   Codec13Parser: {
     parse: jest.fn().mockReturnValue([{ mock: 'codec13' }]),
   },
 }));
 
-jest.mock('../../src/codecs/codec14', () => ({
+jest.mock('../src/codecs/codec14', () => ({
   Codec14Parser: {
     parse: jest.fn().mockReturnValue([{ mock: 'codec14' }]),
   },
 }));
 
-jest.mock('../../src/codecs/codec16', () => ({
+jest.mock('../src/codecs/codec16', () => ({
   Codec16Parser: {
     parse: jest.fn().mockReturnValue([{ mock: 'codec16' }]),
   },
@@ -55,5 +56,4 @@ describe('TeltonikaPackageParser', () => {
     expect(result.codecName).toBe(expectedName);
     expect(result.records).toEqual(expectedRecords);
   });
-
 });
